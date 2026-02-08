@@ -1,4 +1,4 @@
-name: ZMK Firmware Build
+name: ZMK Firmware Build (Albert)
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
@@ -18,7 +19,7 @@ jobs:
             shield: corne_right
 
     steps:
-      - name: Checkout config
+      - name: Checkout user config
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -31,28 +32,34 @@ jobs:
           python -m pip install --upgrade pip
           pip install west
 
-      - name: West init/update (explicit manifest URL)
+      # Create a clean west workspace AWAY from the repo checkout directory.
+      - name: Init west workspace (ZMK upstream)
         run: |
-          rm -rf .west zmk zephyr modules || true
-          west init -m https://github.com/osirispc/zmk-config-albert.git --mr main .
+          rm -rf /tmp/zmk-work
+          mkdir -p /tmp/zmk-work
+          cd /tmp/zmk-work
+
+          # Pull upstream ZMK as the west manifest.
+          west init -m https://github.com/zmkfirmware/zmk.git --mr main .
           west update
+
+          # Sanity checks: zmk/app must exist now.
           ls -la
           ls -la zmk
           ls -la zmk/app
 
-      - name: Build
+      - name: Build firmware
         run: |
-          west build -s zmk/app -b ${{ matrix.board }} -- \
-            -DZMK_CONFIG=${{ github.workspace }}/config \
-            -DSHIELD=${{ matrix.shield }}
+          cd /tmp/zmk-work
 
-      - name: Rename UF2
-        run: |
-          cp build/zephyr/zmk.uf2 ./${{ matrix.shield }}-${{ matrix.board }}.uf2
+          west build -s zmk/app -b ${{ matrix.board }} -- \
+            -DSHIELD=${{ matrix.shield }} \
+            -DZMK_CONFIG=${{ github.workspace }}/config
+
+          cp build/zephyr/zmk.uf2 ${{ github.workspace }}/${{ matrix.shield }}-${{ matrix.board }}.uf2
 
       - name: Upload UF2
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.shield }}-${{ matrix.board }}
-          path: |
-            ${{ matrix.shield }}-${{ matrix.board }}.uf2
+          path: ${{ matrix.shield }}-${{ matrix.board }}.uf2
