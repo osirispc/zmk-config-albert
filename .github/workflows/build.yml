@@ -31,10 +31,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install west
 
-      - name: West init (use repo root west.yml)
+      - name: West init/update (pull ZMK)
         run: |
-          west init -l .
+          west init -l ${{ github.workspace }}
           west update
+          ls -la
+          ls -la zmk
+          ls -la zmk/app
+
 
       - name: Build
         run: |
