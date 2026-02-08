@@ -1,0 +1,33 @@
+name: Build ZMK firmware
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout user config
+        uses: actions/checkout@v4
+
+      - name: Setup ZMK
+        uses: zmkfirmware/setup-zmk@v1
+
+      - name: Build Corne (left)
+        run: |
+          west build -s zmk/app -b nice_nano_v2 -- -DSHIELD=corne_left
+
+      - name: Build Corne (right)
+        run: |
+          west build -s zmk/app -b nice_nano_v2 -- -DSHIELD=corne_right
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: zmk-firmware
+          path: |
+            build/zephyr/zmk.uf2
