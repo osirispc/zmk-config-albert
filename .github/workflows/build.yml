@@ -31,22 +31,28 @@ jobs:
           python -m pip install --upgrade pip
           pip install west
 
-      - name: West init/update (pull ZMK)
+      - name: West init/update (explicit manifest URL)
         run: |
-          west init -l ${{ github.workspace }}
+          rm -rf .west zmk zephyr modules || true
+          west init -m https://github.com/osirispc/zmk-config-albert.git --mr main .
           west update
           ls -la
           ls -la zmk
           ls -la zmk/app
 
-
       - name: Build
         run: |
-          west build -s zmk/app -b ${{ matrix.board }} -- -DZMK_CONFIG=${{ github.workspace }}/config -DSHIELD=${{ matrix.shield }}
+          west build -s zmk/app -b ${{ matrix.board }} -- \
+            -DZMK_CONFIG=${{ github.workspace }}/config \
+            -DSHIELD=${{ matrix.shield }}
+
+      - name: Rename UF2
+        run: |
+          cp build/zephyr/zmk.uf2 ./${{ matrix.shield }}-${{ matrix.board }}.uf2
 
       - name: Upload UF2
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.shield }}-${{ matrix.board }}
           path: |
-            build/zephyr/zmk.uf2
+            ${{ matrix.shield }}-${{ matrix.board }}.uf2
