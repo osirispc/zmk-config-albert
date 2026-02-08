@@ -1,65 +1,11 @@
-name: ZMK Firmware Build (Albert)
+name: ZMK Firmware Build
 
 on:
   push:
     branches: ["main"]
+  pull_request:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - board: nice_nano_v2
-            shield: corne_left
-          - board: nice_nano_v2
-            shield: corne_right
-
-    steps:
-      - name: Checkout user config
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Install west
-        run: |
-          python -m pip install --upgrade pip
-          pip install west
-
-      # Create a clean west workspace AWAY from the repo checkout directory.
-      - name: Init west workspace (ZMK upstream)
-        run: |
-          rm -rf /tmp/zmk-work
-          mkdir -p /tmp/zmk-work
-          cd /tmp/zmk-work
-
-          # Pull upstream ZMK as the west manifest.
-          west init -m https://github.com/zmkfirmware/zmk.git --mr main .
-          west update
-
-          # Sanity checks: zmk/app must exist now.
-          ls -la
-          ls -la zmk
-          ls -la zmk/app
-
-      - name: Build firmware
-        run: |
-          cd /tmp/zmk-work
-
-          west build -s zmk/app -b ${{ matrix.board }} -- \
-            -DSHIELD=${{ matrix.shield }} \
-            -DZMK_CONFIG=${{ github.workspace }}/config
-
-          cp build/zephyr/zmk.uf2 ${{ github.workspace }}/${{ matrix.shield }}-${{ matrix.board }}.uf2
-
-      - name: Upload UF2
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.shield }}-${{ matrix.board }}
-          path: ${{ matrix.shield }}-${{ matrix.board }}.uf2
+    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
