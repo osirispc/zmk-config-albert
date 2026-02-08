@@ -1,0 +1,24 @@
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/keys.h>
+
+/ {
+  keymap {
+    compatible = "zmk,keymap";
+
+    base {
+      bindings = <
+        // Row 1 (L)                         // Row 1 (R)
+        &kp ESC  &kp Q &kp W &kp E &kp R &kp T    &kp Y &kp U &kp I &kp O &kp P &kp BSPC
+
+        // Row 2 (L)                         // Row 2 (R)
+        &kp TAB  &kp A &kp S &kp D &kp F &kp G    &kp H &kp J &kp K &kp L &kp SEMI &kp SQT
+
+        // Row 3 (L)                         // Row 3 (R)
+        &kp LSHFT &kp Z &kp X &kp C &kp V &kp B   &kp N &kp M &kp COMMA &kp DOT &kp SLASH &kp DEL
+
+        // Thumbs: 3 left                                // Thumbs: 3 right
+                   &kp LGUI  &kp SPACE  &kp ENTER        &kp ENTER &kp BSPC  &kp RALT
+      >;
+    };
+  };
+};
